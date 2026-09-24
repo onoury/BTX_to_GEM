@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101518">
+  <title>BTX → GEM · Model workspace</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="scripts.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◇</span><div><h1>BTX <span>→</span> GEM</h1><p>Model workspace</p></div></div>
+    <div class="header-right"><span class="local-label">Files stay in your browser</span><span id="runtime" class="runtime" role="status">Loading Python…</span></div>
+  </header>
+  <main>
+    <section class="panel setup" aria-labelledby="setup-title">
+      <div class="section-heading"><div class="heading-line"><span class="step">01</span><h2 id="setup-title">Source & drawing settings</h2></div><span class="hint">Match your Bluebeam drawing</span></div>
+      <div class="setup-grid">
+        <label class="file-tile" id="btx-drop"><span class="file-icon">↥</span><span><strong id="btx-action">Upload .btx</strong><small id="btx-name">Choose or drop your tool set</small></span><input id="btx-file" type="file" accept=".btx" aria-label="Upload or replace BTX file"></label>
+        <label class="file-tile" id="csv-drop"><span class="file-icon">↥</span><span><strong id="csv-action">Upload room names</strong><small id="csv-name">Room_Names.csv</small></span><input id="csv-file" type="file" accept=".csv,text/csv" aria-label="Upload or replace room names CSV"></label>
+        <label class="field">Location<select id="location" disabled><option>Loading…</option></select></label>
+        <label class="field">Page scale<select id="scale" disabled><option>Loading…</option></select></label>
+        <label class="field">Grid density<select id="grid" disabled><option>Loading…</option></select></label>
+        <label class="field">Floor height <span class="input-unit"><input id="height" type="number" min="0.01" max="1000" step="any" value="9" disabled><span>ft</span></span></label>
+      </div>
+      <div id="custom-settings" class="custom-settings" hidden>
+        <label id="custom-scale-field" class="field" hidden>Custom page scale
+          <span class="ratio-input"><span>1 :</span><input id="custom-scale" type="number" min="0.000001" step="any" value="120" aria-describedby="custom-scale-help" disabled></span>
+          <small id="custom-scale-help">Enter N for 1:N. For example, 1″ = 10 ft is 1:120.</small>
+        </label>
+        <label id="custom-inches-field" class="field" hidden>Custom grid spacing · inches
+          <span class="input-unit"><input id="custom-grid-inches" type="number" min="0.000001" step="any" value="0.05905512" aria-describedby="custom-grid-help" disabled><span>in</span></span>
+        </label>
+        <label id="custom-cm-field" class="field" hidden>Custom grid spacing · centimetres
+          <span class="input-unit"><input id="custom-grid-cm" type="number" min="0.000001" step="any" value="0.15" aria-describedby="custom-grid-help" disabled><span>cm</span></span>
+        </label>
+        <p id="custom-grid-help" class="custom-help" hidden>Enter the spacing on the drawing page, before applying the page scale.</p>
+      </div>
+      <div class="setup-note"><span id="scale-note">Select the drawing’s scale and snapping grid before export.</span><button class="text-button" id="retry" hidden>Retry loading</button></div>
+    </section>
+    <div id="message" class="message" role="alert" hidden></div>
+    <div class="workspace">
+      <section class="panel rooms-panel" aria-labelledby="rooms-title">
+        <div class="section-heading"><div class="heading-line"><span class="step">02</span><h2 id="rooms-title">Room names</h2></div><span id="row-count" class="badge">0 rows</span></div>
+        <p class="panel-note">Rows pair with polygons in BTX detection order. Room numbers are labels; they do not change the pairing.</p>
+        <div class="table-scroll"><table><thead><tr><th class="order-col" title="BTX detection order">#</th><th class="number-col">Room #</th><th>Name</th><th class="floor-col">Floor</th><th class="delete-col"><span class="sr-only">Remove</span></th></tr></thead><tbody id="room-rows"></tbody></table>
+          <div id="room-empty" class="table-empty"><span class="empty-glyph" aria-hidden="true">▤</span><strong>Your room schedule</strong><p>Upload a CSV to edit names and floors here, or add rows below.</p></div>
+        </div>
+        <div class="table-footer"><button id="add-row" class="secondary">+ Add room</button><button id="save-csv" class="text-button" disabled>Download CSV ↓</button></div>
+        <p class="panel-note last-note">Edits update the plans automatically. A replacement CSV overwrites this table.</p>
+      </section>
+      <div class="model-column">
+        <section class="panel summary-panel" aria-labelledby="summary-title">
+          <div class="section-heading"><div class="heading-line"><span class="step">03</span><h2 id="summary-title">Model summary</h2></div><span class="badge" id="model-status" role="status">Waiting for files</span></div>
+          <div class="metrics"><div><span>BTX polygons</span><strong id="metric-polygons">—</strong></div><div><span>Paired rooms</span><strong id="metric-paired">—</strong></div><div><span>Highest floor</span><strong id="metric-floors">—</strong></div><div><span>Room area <small>m²</small></span><strong id="metric-area">—</strong></div></div>
+          <div id="floor-summary" class="floor-summary">Upload a BTX to generate the model summary.</div>
+          <div id="warnings" class="warnings" hidden></div>
+        </section>
+        <section class="panel plans-panel" aria-labelledby="plans-title">
+          <div class="section-heading"><h2 id="plans-title">Floor plans</h2><div class="plot-options"><label>Labels <select id="labels"><option value="name">Names</option><option value="index">Indices</option><option value="none">None</option></select></label><label>Units <select id="units"><option value="points">Points</option><option value="metres">Metres</option></select></label></div></div>
+          <div id="floor-tabs" class="tabs" role="tablist" aria-label="Floor selection"></div>
+          <div id="plans" class="plans" role="tabpanel" aria-label="Floor plans"><div class="empty-state"><div class="plan-symbol" aria-hidden="true">⌑</div><h3>Your floor plans appear here</h3><p>Upload a .btx file and room names to review the healed geometry before export.</p></div></div>
+          <div class="plot-key"><span><i class="key-line"></i>Axis-aligned</span><span><i class="key-line red"></i>Non-axis-aligned</span><span>Drag to pan · scroll to zoom</span></div>
+        </section>
+        <section class="panel export-panel" aria-labelledby="export-title">
+          <div class="export-copy"><span class="step">04</span><div><h2 id="export-title">Review, then export</h2><p id="export-note">Review the live previews, then confirm to create and download your GEM.</p></div></div><button id="review-export" class="primary" disabled>Review GEM export <span>↗</span></button>
+        </section>
+        <section class="panel viewer-panel" aria-labelledby="viewer-title">
+          <div class="section-heading"><h2 id="viewer-title">3D wireframe</h2><div class="viewer-actions"><select id="viewer-floor" aria-label="3D floor selection" disabled><option value="all">All floors</option></select><button id="reset-view" class="text-button" disabled>Reset view</button><button id="download-gem" class="text-button" disabled>GEM ↓</button></div></div>
+          <div id="viewer-empty" class="empty-state"><span class="wire-symbol" aria-hidden="true">◇</span><h3>Your live 3D model</h3><p>Upload a BTX to generate the wireframe. Room names and floors update it automatically.</p></div>
+          <div id="viewer" hidden></div>
+          <p id="viewer-unassigned" class="warnings" hidden>Grey polygons have no assigned floor and are shown at ground level for preview only. Add room names and floors to include them in the export.</p>
+          <div class="viewer-footer"><span id="viewer-status">Waiting for BTX</span><span>Rotate · zoom · isolate rooms in the legend</span></div>
+        </section>
+      </div>
+    </div>
+    <footer class="page-footer"><span>BTX → GEM <span class="footer-sep">/</span> Browser workspace</span><details><summary>How to run & conversion notes</summary><p>Keep index.html, styles.css, scripts.js and pyscripts.py in one folder. Serve that folder with any static web server. For a local preview, run <code>python -m http.server 8000</code> there, then open <a href="http://localhost:8000">http://localhost:8000</a>. Internet access is needed to load Pyodide and Plotly.</p><p>Geometry uses the original Python decoding, placement, healing, snapping, scaling, extrusion and GEM writer. Locations and grid presets come from that script. Custom grid spacing is measured on the drawing page: inches × 72 or centimetres ÷ 2.54 × 72 gives points. Custom page scale uses 1:N (for example, 1″ = 10 ft means N = 120). Floor offsets are (floor − 1) × height; the default is 9 ft. The export contains no openings. The displayed area sums paired room polygons; it is not a union or overlap check.</p><p>CSV rows map to polygons in order. “Room #” is informational. The 3D preview updates automatically after uploads and edits. Unpaired polygons are shown in grey at ground level until assigned a floor, and are excluded from export. Confirmation is required only to create and download a GEM file. Changed inputs invalidate the previous downloadable GEM.</p></details></footer>
+  </main>
+  <dialog id="export-dialog" aria-labelledby="dialog-title"><form method="dialog"><div class="dialog-heading"><span class="eyebrow">EXPORT CONFIRMATION</span><button class="icon-button" value="cancel" aria-label="Close export confirmation">×</button></div><h2 id="dialog-title">Create this GEM model?</h2><p class="dialog-intro">Check the summary and drawing settings before you download.</p><dl id="confirm-summary"></dl><div id="confirm-warnings" class="warnings" hidden></div><label id="mismatch-label" class="check-label" hidden><input id="accept-mismatch" type="checkbox">I understand that unmatched rows and polygons will be excluded.</label><label class="field">Filename<span class="filename-input"><input id="gem-filename" value="model" maxlength="120" required><span>.gem</span></span></label><p class="panel-note">This creates and downloads the paired rooms shown in the live preview.</p><div class="dialog-buttons"><button class="secondary" value="cancel">Keep editing</button><button id="confirm-export" class="primary" type="button">Create & download GEM</button></div></form></dialog>
+  <noscript><p class="message">Enable JavaScript to use this browser app.</p></noscript>
+</body>
+</html>
